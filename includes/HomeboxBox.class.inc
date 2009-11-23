@@ -7,7 +7,7 @@
 class HomeboxBox
 {
   private $data = array();
-  
+
   private $module      = NULL;
   private $name        = NULL; // Unique identifier through each module
   private $identifier  = NULL; // $module::$name
@@ -27,7 +27,7 @@ class HomeboxBox
 
   /**
    * Box object contructor
-   * 
+   *
    * @param $module
    *  Module name which handles this kind of box
    * @param $name
@@ -36,9 +36,9 @@ class HomeboxBox
   function __construct($module, $name) {
     $this->identifier       = "{$module}::{$name}";
     $this->title_callback   = "{$module}_{$name}_homebox_set_box_title";
-    $this->content_callback = "{$module}_{$name}_homebox_set_box_content";    
+    $this->content_callback = "{$module}_{$name}_homebox_set_box_content";
   }
-  
+
   function __destruct() {
     // TODO: really unsefull?
   }
