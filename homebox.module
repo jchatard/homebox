@@ -1,0 +1,83 @@
+<?php
+
+// CTools API requirements
+define('HOMEBOX_MINIMUM_CTOOLS_API_VERSION', '1.2');
+
+/**
+ * Implementation of hook_requirements()
+ * 
+ * We need CTools API 1.2 (TODO: sure?)
+ */
+function homebox_requirements($phase) {
+  $requirements = array();
+  if (!module_invoke('ctools', 'api_version', HOMEBOX_MINIMUM_CTOOLS_API_VERSION)) {
+     $requirements['homebox_ctools'] = array(
+       'title' => $t('Homebox requires Chaos Tool Suite (CTools) API Version'),
+       'value' => t('At least @api', array('@api' => HOMEBOX_MINIMUM_CTOOLS_API_VERSION)),
+       'severity' => REQUIREMENT_ERROR,
+     );
+  }
+  return $requirements;
+}
+
+/**
+ * Loads one box from the database
+ * 
+ * @param $id
+ * @param $parts
+ *  Indicates which parts of the box should be loaded:
+ *    'all', the whole box is loaded (default)
+ *    'name', loads only box name/title
+ *    'config', loads configuration zone, this includes Views exposed filters as well
+ *    'content', only loads box content
+ * Of course you can load multiple parts at once as $parts is an array.
+ * You can even define your own 'parts' within your module be implementing:
+ * @code
+ * hook_homebox_define_parts()
+ * @endcode
+ * Which should return an array of parts name, i.e:
+ * @code
+ * array('my_custom_box_part', 'another_custom_box_part')
+ */
+function homebox_load_box($id, $parts = array('all')) {
+}
+
+/**
+ * Finds every available boxes parts defined in 3rd party module
+ * 
+ * @param $sort
+ *  As seen in module_implements()
+ * @param $refresh
+ *  As seen in module_implements()
+ * @return Array keyed by module name
+ *  Containing parts implemented by each modules
+ */
+function homebox_parts_implements($sort = FALSE, $refresh = FALSE) {
+  // TODO: why not use module_invoke_all
+  foreach (module_implements('homebox_define_parts', $sort, $refresh) as $module) {
+    $parts[$module] = module_invoke($module, 'homebox_define_parts');
+  }
+}
+
+function homebox_homebox_define_parts() {
+  return array('name', 'config', 'content');
+}
+
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ *
+ * It simply tells CTools where to find the .inc files that define various
+ * args, contexts, content_types.
+ */
+// function homebox_ctools_plugin_directory($module, $plugin) {
+//   if ($module == 'homebox' && !empty($plugin)) {
+//     return "plugins/$plugin";
+//   }
+// }
+
+// TODO
+// function homebox_get_ctools_plugins() {
+//   ctools_include('plugins');
+//   ctools_get_plugins('homebox', 'homebox_boxes');
+// }

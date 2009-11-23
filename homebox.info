@@ -1,0 +1,7 @@
+name = Homebox
+description = Homebox experimental version using CTools
+package = User interface
+dependencies[] = ctools
+dependencies[] = page_manager
+core = 6.x
+php = 5.2
