@@ -3,6 +3,8 @@
 // CTools API requirements
 define('HOMEBOX_MINIMUM_CTOOLS_API_VERSION', '1.2');
 
+// Includes revelant files
+
 /**
  * Implementation of hook_requirements()
  * 
@@ -65,6 +67,19 @@ function homebox_homebox_define_parts() {
 
 
 /**
+ * Include homebox .inc files as necessary.
+ */
+function homebox_include($file) {
+  static $used = array();
+  if (!isset($used[$file])) {
+    require_once './' . drupal_get_path('module', 'homebox') . "/includes/$file.inc";
+  }
+
+  $used[$file] = TRUE;
+}
+
+
+/**
  * Implementation of hook_ctools_plugin_directory().
  *
  * It simply tells CTools where to find the .inc files that define various
@@ -81,3 +96,30 @@ function homebox_homebox_define_parts() {
 //   ctools_include('plugins');
 //   ctools_get_plugins('homebox', 'homebox_boxes');
 // }
+
+
+/**
+ * Testing part
+ */
+homebox_include('HomeboxBox.class');
+
+$box = new HomeboxBox('homebox', 'recent_comments');
+$box->setTitle(t('Recent comments'));
+$box->setDescription(t('Shows recent comments posted on the site'));
+$box->setContent('<div><h3>Recent comments</h3><ul><li>1 comment</li></ul></div>');
+
+print_r($box);
+
+
+function homebox_recent_comments_homebox_set_box_content($text) {
+  return $text;
+}
+
+/***
+
+Dans le template identifier une box unique comme ceci:
+
+"{$module}::{$name}::{$uid}::{$delta}::{$tab}" avec en primary key $uid + $delta
+$tab == my-tab => My Tab
+
+*/
