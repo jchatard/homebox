@@ -101,6 +101,8 @@ function homebox_include($file) {
 /**
  * Testing part
  */
+homebox_include('HomeboxPage.class');
+homebox_include('HomeboxTab.class');
 homebox_include('HomeboxBox.class');
 
 $box = new HomeboxBox('homebox', 'recent_comments');
@@ -108,10 +110,18 @@ $box->setTitle(t('Recent comments'));
 $box->setDescription(t('Shows recent comments posted on the site'));
 $box->setContent('<div><h3>Recent comments</h3><ul><li>1 comment</li></ul></div>');
 
-print_r($box);
+// print_r($box);
 
+$tab = new HomeboxTab('My new tab');
+$tab->addBox($box);
+$tab->addBox($box);
 
-function homebox_recent_comments_homebox_set_box_content($text) {
+$page = new HomeboxPage('My Homebox page');
+$page->addTab($tab);
+$page->addTab($tab);
+
+print_r($page);
+function homebox_recent_comments_set_box_content($text) {
   return $text;
 }
 

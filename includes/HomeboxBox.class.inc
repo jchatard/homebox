@@ -2,6 +2,7 @@
 /**
  * @file
  * TODO Add file description for Box Class
+ * TODO why not rename Homebox Box as Homebox Widget?
  */
 
 class HomeboxBox
@@ -10,7 +11,6 @@ class HomeboxBox
 
   private $module      = NULL;
   private $name        = NULL; // Unique identifier through each module
-  private $identifier  = NULL; // $module::$name
   private $title       = NULL;
   private $description = NULL;
   private $content     = NULL;
@@ -39,16 +39,14 @@ class HomeboxBox
    * @param $name
    *  Unique name of a particular box through it's module
    */
-  function __construct($module, $name) {
+  public function __construct($module, $name) {
     if (module_exists($module)) {
       $this->module           = $module;
       $this->name             = $name;
-      $this->identifier       = "{$module}::{$name}";
-      $this->title_callback   = "{$module}_{$name}_homebox_set_box_title";
-      $this->content_callback = "{$module}_{$name}_homebox_set_box_content";
+      $this->title_callback   = "{$module}_{$name}_set_box_title";
+      $this->content_callback = "{$module}_{$name}_set_box_content";
       // TODO add other callback, but not here to have a chance to detect available options
-      // The idea is to let Homebox core module instanciate the Object
-      return TRUE;
+      // The idea is to let Homebox core module instanciate the HomeBox Object
     }
     else {
       // TODO generate a dblog entry, fire an exception
@@ -56,99 +54,71 @@ class HomeboxBox
     }
   }
 
-  function __destruct() {
-    // TODO: really usefull?
-  }
-
-  /***
-  public function __set($name, $value) {
-    if (!isset($this->{$name})) {
-      $this->data[$name] = $value;
-    }
-    else {
-      // TODO: Fire exception or something to prevent
-      // from redefining reserved members
-      return FALSE;
-    }
-  }
-
-  public function __isset($name) {
-    if (array_key_exists($name, $this->data)) {
-      return isset($this->data[$name]);
-    }
-    return FALSE;
-  }
-
-  public function __get($name) {
-    if (array_key_exists($name, $this->data)) {
-      return $this->data[$name];
-    }
-    return null;
-  }
-
-  public function __unset($name) {
-    if (array_key_exists($name, $this->data)) {
-      unset($this->data[$name]);
-    }
-  }
-  */
-  function getModule() {
+  public function getModule() {
     return $this->module;
   }
 
-  function getName() {
+  public function getName() {
     return $this->name;
   }
 
-  function getIdentifier() {
-    return $this->identifier;
+  /**
+   * Identifier is made of the module name
+   * and the unique box name
+   */
+  public function getIdentifier() {
+    return "{$this->module}:{$this->name}";
   }
 
   // Title stuff
-  function getTitle() {
+  public function getTitle() {
     return $this->title;
   }
 
-  function setTitle($title) {
+  public function setTitle($title) {
     $args = func_get_args();
-    if (count($args) > 1 || function_exists($this->title_callback)) {
+    // If more than one arg AND title_callback implementation exists use it
+    if (count($args) > 1 && function_exists($this->title_callback)) {
       if ($this->title = call_user_func_array($this->title_callback, $args)) {
         return TRUE;
       }
       else {
+        // Title callback doesn't exists
+        // and more than 1 arg was given
         return FALSE;
       }
     }
     else {
+      // Just return $title as defined in arg
       $this->title = $title;
       return TRUE;
     }
   }
 
-  function getTitleCallback() {
+  public function getTitleCallback() {
     return $this->title_callback;
   }
 
-  function setTitleCallback($callback) {
+  public function setTitleCallback($callback) {
     return $this->title_callback = $callback;
   }
 
   //function setTitle($title) {
 
   // Content stuff
-  function getContent() {
+  public function getContent() {
     return $this->content;
   }
 
-  function getContentCallback() {
+  public function getContentCallback() {
     return $this->content_callback;
   }
 
-  function setContentCallback($callback) {
+  public function setContentCallback($callback) {
     return $this->content_callback = $callback;
   }
 
-  function setContent() {
+  public function setContent() {
     $args = func_get_args();
     if ($this->content = call_user_func_array($this->content_callback, $args)) {
       return TRUE;
@@ -159,11 +129,11 @@ class HomeboxBox
   }
 
   // Description stuff
-  function getDescription() {
+  public function getDescription() {
     return $this->description;
   }
 
-  function setDescription($description) {
+  public function setDescription($description) {
     return $this->description = $description;
   }
 }

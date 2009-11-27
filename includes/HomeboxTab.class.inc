@@ -4,20 +4,38 @@
  * TODO Add file description for Tab Class
  */
 
-class homebox_tab {
-  var $name = t('New tab');
-
-  function homebox_tab($name = NULL) {
-    $this->set_name($name);
+class HomeboxTab {
+  private $name  = NULL;
+  private $slug  = NULL;
+  private $boxes = array();
+  
+  public function __construct($name = NULL) {
+    $this->setName($name);
+    $this->setSlug($name);
   }
-  function set_name($name) {
+  
+  public function __destruct() {
+    module_invoke_all('hombebox_tab_destruct', $this);
+  }
+  
+  public function setName($name) {
     if (!is_null($name)) {
       $this->name = $name;
     }
-    return $this->name;
+    return $this->name = t('New tab');
   }
-  function delete_tab() {
-    $success = module_invoke_all('hombebox_tab_delete', $this);
-    $this = NULL;
+
+  private function setSlug($name) {
+    if (!is_null($name)) {
+      $this->slug = drupal_strtolower(str_replace(' ', '-', $name));
+      return $this->slug;
+    }
+    return $this->slug = t('new-tab');
   }
+
+  public function addBox(&$box_object) {
+    // Check array_push() for keyed value pairs
+    return array_push($this->boxes, $box_object);
+  }
+  
 }
