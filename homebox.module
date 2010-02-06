@@ -3,6 +3,16 @@
 // CTools API requirements
 define('HOMEBOX_MINIMUM_CTOOLS_API_VERSION', '1.2');
 
+/**
+ * Testing part
+ */
+homebox_include('HomeboxPage.class');
+homebox_include('HomeboxTab.class');
+homebox_include('HomeboxBox.class');
+homebox_include('handler.block');
+
+drupal_add_js(drupal_get_path('module', 'homebox') .'/homebox.js');
+drupal_add_js(drupal_get_path('module', 'homebox') .'/jquery.masonry.min.js');
 // Includes revelant files
 
 /**
@@ -21,6 +31,113 @@ function homebox_requirements($phase) {
   }
   return $requirements;
 }
+
+function homebox_menu() {
+  $items = array();
+
+  $items['homebox'] = array(
+    'title' => t('Homebox'),
+    'page callback' => 'homebox_render_page',
+    'access arguments' => array(TRUE),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['homebox/content/%'] = array(
+    'page callback' => 'homebox_load_content',
+    'access arguments' => array(TRUE),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items['homebox/loadboxes'] = array(
+    'page callback' => 'homebox_modal_test',
+    'access arguments' => array(TRUE),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function homebox_modal_test() {
+  ctools_include('ajax');
+  ctools_modal_add_js();
+  
+  // $output[] = ctools_modal_command_display("Title", "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+  //$output[] = ctools_ajax_command_replace('#modal-message', '<div id="modal-message">Hello Dolly</div>');
+  $boxes = array();
+  foreach (module_implements('declare_boxes') as $module) {
+    $declared_boxes = module_invoke($module, 'declare_boxes');
+    $boxes = array_merge($boxes, $declared_boxes);
+  }
+  
+  foreach ($boxes as $key => $box) {
+    //print_r($box);
+    $html = theme('homebox_box', $box);
+    $output[] = ctools_ajax_command_append('#homebox', $html);
+  }
+  
+  ctools_ajax_render($output);
+}
+
+function homebox_load_content($identifer = NULL) {
+  ctools_include('ajax');
+  
+  
+  $identifer = arg(2);
+  list($module, $name) = explode(':', $identifer);
+  
+  $box = new HomeboxBox($module, $name, TRUE);
+  $html = theme('homebox_box', $box);
+  $output[] = ctools_ajax_command_append('#homebox', $html);
+  ctools_ajax_render($output);
+}
+
+function homebox_render_page() {
+  ctools_include('ajax');
+  ctools_include('modal');
+  ctools_include('plugins');
+  ctools_modal_add_js();
+
+  $boxes = array();
+  foreach (module_implements('declare_boxes') as $module) {
+    $declared_boxes = module_invoke($module, 'declare_boxes');
+    $boxes = array_merge($boxes, $declared_boxes);
+  }
+
+  //print_r($boxes);
+  $identifiers = array();
+  foreach ($boxes as $key => $box) {
+    $identifiers[] = $box->getIdentifier();
+  }
+
+  $tab1 = new HomeboxTab('First tab');
+  $tab2 = new HomeboxTab('Second tab');
+
+  $tabs_name = array($tab1->getName(), $tab2->getName());
+  
+  $tabs = array($tab1, $tab2);
+  
+  drupal_add_js(array('homebox' => array('tabs' => $tabs_name)), $type = 'setting');
+
+  // ctools_ajax_command_settings(array('homebox' => $identifiers));
+  drupal_add_js(array('homebox' => array('boxes' => $identifiers)), $type = 'setting');
+  return theme('homebox_page', $tabs);
+  
+  // $box = new HomeboxBox('homebox', 'recent_comments');
+  // $box->setTitle(t('Recent comments'));
+  // $box->setDescription(t('Shows recent comments posted on the site'));
+  // $box->setContent('<div><h3>Recent comments</h3><ul><li>1 comment</li></ul></div>');
+  // 
+  // $tab = new HomeboxTab('My new tab');
+  // $tab->addBox($box);
+  // $tab->addBox($box);
+  // 
+  // $page = new HomeboxPage('My Homebox page');
+  // $page->addTab($tab);
+  // $page->addTab($tab);
+
+}
+
+
 
 /**
  * Loads one box from the database
@@ -65,6 +182,22 @@ function homebox_homebox_define_parts() {
   return array('name', 'config', 'content');
 }
 
+/**
+ * Implementation of hook_theme().
+ */
+function homebox_theme() {
+  return array(
+    // Set hook name: see template_preprocess_homebox()
+    'homebox_page' => array(
+      'arguments' => array('tabs' => $tabs),
+      'template' => 'homebox-page', // Set template to homebox-page.tpl.php
+    ),
+    'homebox_box' => array(
+      'arguments' => array('box' => $box),
+      'template' => 'homebox-box', // Set template to homebox-box.tpl.php
+    ),
+  );
+}
 
 /**
  * Include homebox .inc files as necessary.
@@ -97,30 +230,6 @@ function homebox_include($file) {
 //   ctools_get_plugins('homebox', 'homebox_boxes');
 // }
 
-
-/**
- * Testing part
- */
-homebox_include('HomeboxPage.class');
-homebox_include('HomeboxTab.class');
-homebox_include('HomeboxBox.class');
-
-$box = new HomeboxBox('homebox', 'recent_comments');
-$box->setTitle(t('Recent comments'));
-$box->setDescription(t('Shows recent comments posted on the site'));
-$box->setContent('<div><h3>Recent comments</h3><ul><li>1 comment</li></ul></div>');
-
-// print_r($box);
-
-$tab = new HomeboxTab('My new tab');
-$tab->addBox($box);
-$tab->addBox($box);
-
-$page = new HomeboxPage('My Homebox page');
-$page->addTab($tab);
-$page->addTab($tab);
-
-print_r($page);
 function homebox_recent_comments_set_box_content($text) {
   return $text;
 }

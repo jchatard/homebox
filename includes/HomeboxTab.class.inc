@@ -10,7 +10,7 @@ class HomeboxTab {
   private $boxes = array();
   
   public function __construct($name = NULL) {
-    $this->setName($name);
+    $this->name = $name;
     $this->setSlug($name);
   }
   
@@ -22,7 +22,11 @@ class HomeboxTab {
     if (!is_null($name)) {
       $this->name = $name;
     }
-    return $this->name = t('New tab');
+    $this->name = t('New tab');
+  }
+  
+  public function getName() {
+    return $this->name;
   }
 
   private function setSlug($name) {
