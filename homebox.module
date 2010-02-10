@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * TODO
+ * implémenter un requester de widget/box
+ * implémenter un server de widget/box
+ */
+
 // CTools API requirements
 define('HOMEBOX_MINIMUM_CTOOLS_API_VERSION', '1.2');
 
@@ -12,7 +18,6 @@ homebox_include('HomeboxBox.class');
 homebox_include('handler.block');
 
 drupal_add_js(drupal_get_path('module', 'homebox') .'/homebox.js');
-drupal_add_js(drupal_get_path('module', 'homebox') .'/jquery.masonry.min.js');
 // Includes revelant files
 
 /**
@@ -41,13 +46,19 @@ function homebox_menu() {
     'access arguments' => array(TRUE),
     'type' => MENU_NORMAL_ITEM,
   );
-  
-  $items['homebox/content/%'] = array(
-    'page callback' => 'homebox_load_content',
+
+  $items['homebox/get/tab/%'] = array(
+    'page callback' => 'homebox_serve_tab',
     'access arguments' => array(TRUE),
     'type' => MENU_CALLBACK,
   );
-  
+
+  $items['homebox/get/box/%'] = array(
+    'page callback' => 'homebox_serve_box',
+    'access arguments' => array(TRUE),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['homebox/loadboxes'] = array(
     'page callback' => 'homebox_modal_test',
     'access arguments' => array(TRUE),
@@ -78,17 +89,52 @@ function homebox_modal_test() {
   ctools_ajax_render($output);
 }
 
-function homebox_load_content($identifer = NULL) {
+/**
+ * TODO Make this a menu arg not a arg() el
+ */
+function homebox_serve_box($identifer = NULL) {
   ctools_include('ajax');
   
-  
-  $identifer = arg(2);
+
+  $identifer = arg(3);
+  $tab = "#". arg(4);
+
   list($module, $name) = explode(':', $identifer);
   
+  // TODO on ne devrait pas déterminer qu'il s'agit d'un bloc
+  // à l'extérieure de la classe, mais dans le constructeur ou
+  // dans une fonction de Homebox générique
   $box = new HomeboxBox($module, $name, TRUE);
+
   $html = theme('homebox_box', $box);
-  $output[] = ctools_ajax_command_append('#homebox', $html);
+
+  $output[] = ctools_ajax_command_append($tab .' .column:first', $html);
+
   ctools_ajax_render($output);
+}
+
+function homebox_serve_tab($tab_slug = NULL) {
+  ctools_include('ajax');
+
+  $tab_slug = arg(3);
+  // A function must find the right tab
+  $name = 'First tab';
+
+  $boxes_identifiers = homebox_find_boxes_identifiers_for_tab($tab_slug);
+  // $key = 'homebox'. $tab_slug;
+  // $settings = array('homebox' => array('tabs', array($tab_slug, $boxes_identifiers)));
+  // 
+  // $output[] = ctools_ajax_command_settings($settings);
+  // 
+  // ctools_ajax_render($output);
+  
+  $response = array(
+    'tab' => $tab_slug,
+    'boxes' => $boxes_identifiers,
+  );
+  
+  drupal_json($response);
+  die();
 }
 
 function homebox_render_page() {
@@ -96,7 +142,9 @@ function homebox_render_page() {
   ctools_include('modal');
   ctools_include('plugins');
   ctools_modal_add_js();
-
+  
+  jquery_ui_add(array('ui.draggable', 'ui.droppable', 'ui.sortable', 'ui.tabs'));  // For a single file
+  
   $boxes = array();
   foreach (module_implements('declare_boxes') as $module) {
     $declared_boxes = module_invoke($module, 'declare_boxes');
@@ -117,8 +165,8 @@ function homebox_render_page() {
   $tabs = array($tab1, $tab2);
   
   drupal_add_js(array('homebox' => array('tabs' => $tabs_name)), $type = 'setting');
-
-  // ctools_ajax_command_settings(array('homebox' => $identifiers));
+  // 
+  // // ctools_ajax_command_settings(array('homebox' => $identifiers));
   drupal_add_js(array('homebox' => array('boxes' => $identifiers)), $type = 'setting');
   return theme('homebox_page', $tabs);
   
@@ -137,7 +185,29 @@ function homebox_render_page() {
 
 }
 
+/**
+ * @param $tab_slug
+ *  A string representing a HomeboxTab slug
+ * 
+ * @return array
+ *  An array containing all boxes identifiers
+ */
+function homebox_find_boxes_identifiers_for_tab($tab_slug) {
+  // TODO Find the right tab
+  $boxes = array();
+  foreach (module_implements('declare_boxes') as $module) {
+    $declared_boxes = module_invoke($module, 'declare_boxes');
+    $boxes = array_merge($boxes, $declared_boxes);
+  }
 
+  //print_r($boxes);
+  $identifiers = array();
+  foreach ($boxes as $key => $box) {
+    $identifiers[] = $box->getIdentifier();
+  }
+
+  return $identifiers;
+}
 
 /**
  * Loads one box from the database

@@ -37,7 +37,7 @@ function homebox_block_set_box_title($module, $delta) {
 }
 
 function homebox_block_set_box_content($module, $delta) {
-  static $count = 0;
+  //static $count = 0;
   // Render block content
   $array = module_invoke($module, 'block', 'view', $delta);
 

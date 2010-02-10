@@ -7,11 +7,14 @@
 class HomeboxTab {
   private $name  = NULL;
   private $slug  = NULL;
+  // private $url   = NULL;
   private $boxes = array();
+  
   
   public function __construct($name = NULL) {
     $this->name = $name;
     $this->setSlug($name);
+    // $this->url = url('homebox/get/tab/'. $this->slug);
   }
   
   public function __destruct() {
@@ -35,6 +38,14 @@ class HomeboxTab {
       return $this->slug;
     }
     return $this->slug = t('new-tab');
+  }
+
+  // public function getUrl() {
+  //    return $this->url;
+  //  }
+
+  public function getSlug() {
+    return $this->slug;
   }
 
   public function addBox(&$box_object) {
